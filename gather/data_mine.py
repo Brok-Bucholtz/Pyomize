@@ -11,6 +11,7 @@ def _get_missing_commits_from_db(db_session, repo):
     db_commits = db_session \
         .query(Commit.sha) \
         .filter(Commit.repository_name == repo.name) \
+        .filter(Commit.organization_login == repo.owner.login) \
         .all()
     page_num = len(db_commits)/PAGE_MAX_SIZE + START_PAGE
     commits = []

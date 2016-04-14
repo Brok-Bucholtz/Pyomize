@@ -47,37 +47,37 @@ def run():
     config.read('config.ini')
     github_api = Github(login_or_token=config.get('Main', 'GithubAccessToken'), per_page=PAGE_MAX_SIZE)
     db_session = sessionmaker(bind=engine)()
+    org_names = [u'google', u'airbnb']
 
-    org_name = u'google'
-    github_google = github_api.get_organization(org_name)
+    for org_name in org_names:
+        organization = github_api.get_organization(org_name)
+        for repo in organization.get_repos():
+            # It would make it easier to train the algorithm by limiting our data to one language
+            if repo.language and repo.language.lower() == u'python':
+                db_repo_args = {
+                    'name': repo.name,
+                    'owner_login': repo.owner.login
+                }
+                db_repo = _get_or_create(db_session, Repository, db_repo_args)
 
-    for repo in github_google.get_repos():
-        # It would make it easier to train the algorithm by limiting our data to one language
-        if repo.language and repo.language.lower() == u'python':
-            db_repo_args = {
-                'name': repo.name,
-                'owner_login': repo.owner.login
-            }
-            db_repo = _get_or_create(db_session, Repository, db_repo_args)
-
-            for commit in _get_new_commits(db_session, repo):
-                db_commit = Commit(
-                    sha=commit.sha,
-                    date=commit.last_modified,
-                    message=commit.commit.message,
-                    committer_email=commit.committer.email if commit.committer else u'',
-                    repository_id=db_repo.id)
-                for commit_file in commit.files:
-                    db_commit.files.append(File(
-                        filename=commit_file.filename,
-                        sha=commit_file.sha,
-                        additions=commit_file.additions,
-                        deletions=commit_file.deletions,
-                        changes=commit_file.changes,
-                        status=commit_file.status,
-                        patch=commit_file.patch))
-                db_session.add(db_commit)
-                db_session.commit()
+                for commit in _get_new_commits(db_session, repo):
+                    db_commit = Commit(
+                        sha=commit.sha,
+                        date=commit.last_modified,
+                        message=commit.commit.message,
+                        committer_email=commit.committer.email if commit.committer else u'',
+                        repository_id=db_repo.id)
+                    for commit_file in commit.files:
+                        db_commit.files.append(File(
+                            filename=commit_file.filename,
+                            sha=commit_file.sha,
+                            additions=commit_file.additions,
+                            deletions=commit_file.deletions,
+                            changes=commit_file.changes,
+                            status=commit_file.status,
+                            patch=commit_file.patch))
+                    db_session.add(db_commit)
+                    db_session.commit()
 
 if __name__ == "__main__":
     run()

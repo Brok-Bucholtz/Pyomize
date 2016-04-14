@@ -9,7 +9,7 @@ def extract_commit_components(commits):
 
     for commit in commits:
         commit_components['messages'].append(commit.message)
-        commit_components['repositories'].append(commit.repository_name)
+        commit_components['repositories'].append(commit.repository.name)
         commit_components['emails'].append(commit.committer_email)
         commit_components['dates'].append(commit.date)
         commit_components['changed_files'].append(len(commit.files))

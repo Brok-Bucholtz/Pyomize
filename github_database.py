@@ -19,7 +19,9 @@ class File(Base):
     changes = Column(Integer)
     status = Column(Unicode(256))
     patch = Column(UnicodeText)
+
     commit_id = Column(Integer, ForeignKey('commit.id'))
+    commit = relationship('Commit', back_populates='files')
 
 
 class Commit(Base):
@@ -29,9 +31,19 @@ class Commit(Base):
     date = Column(String(256))
     message = Column(UnicodeText)
     committer_email = Column(Unicode(256))
-    organization_login = Column(Unicode(256))
-    repository_name = Column(Unicode(256))
     files = relationship(File)
+
+    repository_id = Column(Integer, ForeignKey('repository.id'))
+    repository = relationship('Repository', back_populates='commits')
+
+
+class Repository(Base):
+    __tablename__ = 'repository'
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(256))
+    owner_login = Column(Unicode(256))
+
+    commits = relationship('Commit', back_populates='repository')
 
 engine = create_engine(config.get('Main', 'LocalGithubDB'))
 Base.metadata.create_all(engine)

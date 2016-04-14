@@ -19,7 +19,7 @@ def _get_string_frequency(strings):
     return zip(counter.keys(), counter.values())
 
 
-def _get_general_stats(sample_size=100):
+def _print_general_stats(sample_size=100):
     db_session = sessionmaker(bind=engine)()
     commits = db_session \
         .query(Commit) \
@@ -56,7 +56,7 @@ def _get_general_stats(sample_size=100):
 
 
 def run():
-    _get_general_stats()
+    _print_general_stats()
 
 if __name__ == "__main__":
     run()

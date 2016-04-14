@@ -19,7 +19,7 @@ def _get_string_frequency(strings):
     return zip(counter.keys(), counter.values())
 
 
-def run():
+def _get_general_stats(sample_size=100):
     db_session = sessionmaker(bind=engine)()
     commits = db_session \
         .query(Commit) \
@@ -28,8 +28,8 @@ def run():
         .query(File) \
         .all()
 
-    commit_components = extract_commit_components(commits)
-    commit_file_components = extract_commit_file_components(commit_files)
+    commit_components = extract_commit_components(commits[:sample_size])
+    commit_file_components = extract_commit_file_components(commit_files[:sample_size])
 
     print "Commit Patch Word Frequency"
     print _get_word_frequency(commit_components['messages'])
@@ -54,6 +54,9 @@ def run():
     print "File Status Frequency"
     print _get_string_frequency(commit_file_components['statuses'])
 
+
+def run():
+    _get_general_stats()
 
 if __name__ == "__main__":
     run()

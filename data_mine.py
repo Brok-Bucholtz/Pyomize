@@ -21,7 +21,7 @@ def _get_missing_commits_from_db(db_session, repo):
         if e.status == 409 and e.data['message'] != unicode('Git Repository is empty.'):
             raise e
 
-    return [commit for commit in commits \
+    return [commit for commit in commits
             if commit.sha not in [db_commit.sha for db_commit in db_commits]]
 
 

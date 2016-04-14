@@ -18,7 +18,7 @@ def _get_missing_commits_from_db(db_session, repo):
     try:
         commits = repo.get_commits().reversed.get_page(page_num)
     except GithubException as e:
-        if e.status == 409 and e.data['message'] != unicode('Git Repository is empty.'):
+        if e.status == 409 and e.data['message'] != u'Git Repository is empty.':
             raise e
 
     return [commit for commit in commits
@@ -48,7 +48,7 @@ def run():
     github_api = Github(login_or_token=config.get('Main', 'GithubAccessToken'), per_page=PAGE_MAX_SIZE)
     db_session = sessionmaker(bind=engine)()
 
-    org_name = unicode('google')
+    org_name = u'google'
     github_google = github_api.get_organization(org_name)
 
     for repo in github_google.get_repos():
@@ -65,7 +65,7 @@ def run():
                     sha=commit.sha,
                     date=commit.last_modified,
                     message=commit.commit.message,
-                    committer_email=commit.committer.email if commit.committer else unicode(''),
+                    committer_email=commit.committer.email if commit.committer else u'',
                     repository_id=db_repo.id)
                 for commit_file in commit.files:
                     db_commit.files.append(File(

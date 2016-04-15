@@ -31,7 +31,7 @@ def _print_general_stats(sample_size=100):
     commit_components = extract_commit_components(commits[:sample_size])
     commit_file_components = extract_commit_file_components(commit_files[:sample_size])
 
-    print "Commit Patch Word Frequency"
+    print "Commit Message Word Frequency"
     print _get_word_frequency(commit_components['messages'])
     print "Commit Repo Frequency"
     print _get_string_frequency(commit_components['repositories'])

@@ -1,7 +1,10 @@
-from github import Github, GithubException
+from github import Github, GithubException, RateLimitExceededException
 from github_database import engine, Commit, File, Repository
 from sqlalchemy.orm import sessionmaker
 from ConfigParser import ConfigParser
+from time import time, sleep
+from urllib2 import urlopen, URLError
+from socket import error
 
 PAGE_MAX_SIZE = 100
 START_PAGE = 1
@@ -47,37 +50,63 @@ def run():
     config.read('config.ini')
     github_api = Github(login_or_token=config.get('Main', 'GithubAccessToken'), per_page=PAGE_MAX_SIZE)
     db_session = sessionmaker(bind=engine)()
+
+    org_name_i = 0
     org_names = [u'google', u'airbnb']
 
-    for org_name in org_names:
-        organization = github_api.get_organization(org_name)
-        for repo in organization.get_repos():
-            # It would make it easier to train the algorithm by limiting our data to one language
-            if repo.language and repo.language.lower() == u'python':
-                db_repo_args = {
-                    'name': repo.name,
-                    'owner_login': repo.owner.login
-                }
-                db_repo = _get_or_create(db_session, Repository, db_repo_args)
+    while org_name_i < len(org_names):
+        try:
+            organization = github_api.get_organization(org_names[org_name_i])
+            for repo in organization.get_repos():
+                # It would make it easier to train the algorithm by limiting our data to one language
+                if repo.language and repo.language.lower() == u'python':
+                    db_repo_args = {
+                        'name': repo.name,
+                        'owner_login': repo.owner.login
+                    }
+                    db_repo = _get_or_create(db_session, Repository, db_repo_args)
 
-                for commit in _get_new_commits(db_session, repo):
-                    db_commit = Commit(
-                        sha=commit.sha,
-                        date=commit.last_modified,
-                        message=commit.commit.message,
-                        committer_email=commit.committer.email if commit.committer else u'',
-                        repository_id=db_repo.id)
-                    for commit_file in commit.files:
-                        db_commit.files.append(File(
-                            filename=commit_file.filename,
-                            sha=commit_file.sha,
-                            additions=commit_file.additions,
-                            deletions=commit_file.deletions,
-                            changes=commit_file.changes,
-                            status=commit_file.status,
-                            patch=commit_file.patch))
-                    db_session.add(db_commit)
-                    db_session.commit()
+                    for commit in _get_new_commits(db_session, repo):
+                        db_commit = Commit(
+                            sha=commit.sha,
+                            date=commit.last_modified,
+                            message=commit.commit.message,
+                            committer_email=commit.committer.email if commit.committer else u'',
+                            repository_id=db_repo.id)
+                        for commit_file in commit.files:
+                            db_commit.files.append(File(
+                                filename=commit_file.filename,
+                                sha=commit_file.sha,
+                                additions=commit_file.additions,
+                                deletions=commit_file.deletions,
+                                changes=commit_file.changes,
+                                status=commit_file.status,
+                                patch=commit_file.patch))
+                        db_session.add(db_commit)
+                        db_session.commit()
+        except RateLimitExceededException:
+            wait_ratelimit_reset_seconds = github_api.rate_limiting_resettime-(int(time()))
+            print 'Hit rate limit.  Waiting {} second(s)'.format(wait_ratelimit_reset_seconds)
+            sleep(wait_ratelimit_reset_seconds)
+            print 'Wait over.'
+        except error:
+            wait_for_github_connection_seconds = 60
+            github_url = 'https://www.github.com'
+            gihub_connection_down = True
+
+            while gihub_connection_down:
+                try:
+                    urlopen(github_url)
+                except URLError:
+                    print 'Connection to Github down.  Waiting {} second(s)'.format(wait_for_github_connection_seconds)
+                    sleep(wait_for_github_connection_seconds)
+                    print 'Wait over.  Trying again...'
+                else:
+                    print 'Reconnected to Github.'
+                    gihub_connection_down = False
+        else:
+            org_name_i += 1
+
 
 if __name__ == "__main__":
     run()

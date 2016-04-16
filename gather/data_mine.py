@@ -1,5 +1,6 @@
 from github import Github, GithubException
 from github_database import engine, Commit, File, Repository
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from ConfigParser import ConfigParser
 from time import time, sleep
@@ -107,6 +108,12 @@ def run():
                 else:
                     print 'Reconnected to Github.'
                     gihub_connection_down = False
+        except OperationalError as e:
+            if e.message == "(sqlite3.OperationalError) database is locked":
+                wait_time_seconds = 60
+                print 'DB locked.  Waiting {} second(s)'.format(wait_time_seconds)
+                sleep(wait_time_seconds)
+                print 'Wait over.'
         else:
             org_name_i += 1
 

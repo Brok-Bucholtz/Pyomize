@@ -1,4 +1,4 @@
-from github import Github, GithubException, RateLimitExceededException
+from github import Github, GithubException
 from github_database import engine, Commit, File, Repository
 from sqlalchemy.orm import sessionmaker
 from ConfigParser import ConfigParser
@@ -84,11 +84,14 @@ def run():
                                 patch=commit_file.patch))
                         db_session.add(db_commit)
                         db_session.commit()
-        except RateLimitExceededException:
-            wait_ratelimit_reset_seconds = github_api.rate_limiting_resettime-(int(time()))
-            print 'Hit rate limit.  Waiting {} second(s)'.format(wait_ratelimit_reset_seconds)
-            sleep(wait_ratelimit_reset_seconds)
-            print 'Wait over.'
+        except GithubException as e:
+            if e.status != 403 or u'API rate limit exceeded for ' not in e.data['message']:
+                raise e
+            else:
+                wait_ratelimit_reset_seconds = github_api.rate_limiting_resettime-(int(time()))
+                print 'Hit rate limit.  Waiting {} second(s)'.format(wait_ratelimit_reset_seconds)
+                sleep(wait_ratelimit_reset_seconds)
+                print 'Wait over.'
         except error:
             wait_for_github_connection_seconds = 60
             github_url = 'https://www.github.com'

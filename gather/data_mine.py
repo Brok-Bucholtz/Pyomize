@@ -21,7 +21,7 @@ def _get_missing_commits_from_db(db_session, repo):
     try:
         commits = repo.get_commits().reversed.get_page(page_num)
     except GithubException as e:
-        if e.status == 409 and e.data['message'] != u'Git Repository is empty.':
+        if e.status != 409 or e.data['message'] != u'Git Repository is empty.':
             raise e
 
     return [commit for commit in commits

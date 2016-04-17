@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.text import CountVectorizer
 from github_database import engine, Commit, File
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
 from numpy import mean
 from collections import Counter
 from analyze.helper import extract_commit_components, extract_commit_file_components
@@ -20,17 +20,19 @@ def _get_string_frequency(strings):
     return zip(counter.keys(), counter.values())
 
 
-def _print_general_stats(sample_size=100):
+def _print_general_stats():
     db_session = sessionmaker(bind=engine)()
     commits = db_session \
         .query(Commit) \
+        .options(joinedload(Commit.files)) \
+        .options(joinedload(Commit.repository)) \
         .all()
     commit_files = db_session \
         .query(File) \
         .all()
 
-    commit_components = extract_commit_components(commits[:sample_size])
-    commit_file_components = extract_commit_file_components(commit_files[:sample_size])
+    commit_components = extract_commit_components(commits)
+    commit_file_components = extract_commit_file_components(commit_files)
 
     print "Commit Message Word Frequency"
     print _get_word_frequency(commit_components['messages'])

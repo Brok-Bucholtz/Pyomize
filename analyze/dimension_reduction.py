@@ -1,3 +1,4 @@
+from collections import OrderedDict, Counter
 from github_database import engine, Commit, File
 from sqlalchemy.orm import sessionmaker
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -7,6 +8,11 @@ from analyze.helper import is_merge_commit
 
 def filter_merge_commits(commits):
     return [commit for commit in commits if not is_merge_commit(commit.message)]
+
+
+def get_top_frequent_words(words, top_count):
+    word_occurances = OrderedDict(sorted(Counter(words).items(), key=itemgetter(1), reverse=True))
+    return [word_occurances[0] for word_occurances in word_occurances.items()[:top_count]]
 
 
 def run():

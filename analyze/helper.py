@@ -1,3 +1,6 @@
+from re import match
+
+
 def extract_commit_components(commits):
     commit_components = {
         'messages': [],
@@ -36,3 +39,7 @@ def extract_commit_file_components(commit_files):
         commit_file_components['statuses'].append(commit_file.status)
 
     return commit_file_components
+
+
+def get_first_word(string):
+    return match('^([\s]+)?([^\s]+)', string).group().strip()

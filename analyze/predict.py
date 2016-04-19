@@ -1,16 +1,12 @@
 from sqlalchemy.orm import sessionmaker, joinedload
+from analyze.helper import get_first_word
 from github_database import engine, Commit
-from re import match
 from sklearn.svm import SVC
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from collections import Counter, OrderedDict
 from operator import itemgetter
-
-
-def _get_first_word(string):
-    return match('^([\s]+)?([^\s]+)', string).group().strip()
 
 
 def _get_file_stats(commit_files):
@@ -42,7 +38,7 @@ def run():
         .all()
 
     commit_files_list = [commit.files for commit in commits]
-    commit_first_words = [_get_first_word(commit.message) for commit in commits]
+    commit_first_words = [get_first_word(commit.message) for commit in commits]
     commit_first_words_occurances = OrderedDict(sorted(
         Counter(commit_first_words).items(), key=itemgetter(1), reverse=True))
     label_encoder = LabelEncoder()

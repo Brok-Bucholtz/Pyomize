@@ -2,6 +2,11 @@ from github_database import engine, Commit, File
 from sqlalchemy.orm import sessionmaker
 from sklearn.feature_extraction.text import TfidfVectorizer
 from operator import itemgetter
+from analyze.helper import is_merge_commit
+
+
+def filter_merge_commits(commits):
+    return [commit for commit in commits if not is_merge_commit(commit.message)]
 
 
 def run():

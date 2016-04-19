@@ -7,6 +7,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from collections import Counter, OrderedDict
 from operator import itemgetter
+from analyze.dimension_reduction import filter_merge_commits
 
 
 def _get_file_stats(commit_files):
@@ -37,6 +38,7 @@ def run():
         .options(joinedload(Commit.files)) \
         .all()
 
+    commits = filter_merge_commits(commits)
     commit_files_list = [commit.files for commit in commits]
     commit_first_words = [get_first_word(commit.message) for commit in commits]
     commit_first_words_occurances = OrderedDict(sorted(

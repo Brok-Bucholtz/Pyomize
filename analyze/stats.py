@@ -1,10 +1,12 @@
 from sklearn.feature_extraction.text import CountVectorizer
+from analyze.dimension_reduction import get_file_stats_data
 from github_database import engine, Commit, File
 from sqlalchemy.orm import sessionmaker, joinedload
 from numpy import mean
 from collections import Counter
 from analyze.helper import extract_commit_components, extract_commit_file_components
 from re import compile
+import pylab as pl
 
 
 def _get_word_frequency(lines):
@@ -72,9 +74,37 @@ def _print_first_word_commit_message_frequency():
     print _get_word_frequency(commit_message_first_words)
 
 
+def _break_into_labels(X, y):
+    data = zip(X, y)
+    dict = {}
+    for label in set(y):
+        value = ([], [])
+        for element in data:
+            if element[1] == label:
+                value[0].append(element[0][0])
+                value[1].append(element[0][1])
+        dict[label] = value
+    return dict
+
+
+def _graph_file_stats_to_commit_first_words():
+    available_colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    X_all, y_all = get_file_stats_data(len(available_colors))
+
+    pl.figure()
+    pl.title('Labels on Additions and Deletions')
+    pl.xlabel('Additions')
+    pl.ylabel('Deletions')
+    for label, data in _break_into_labels(X_all, y_all).iteritems():
+        pl.plot(data[0], data[1], 'o' + available_colors.pop(), label=label)
+    pl.legend()
+    pl.show()
+
+
 def run():
     _print_general_stats()
     _print_first_word_commit_message_frequency()
+    _graph_file_stats_to_commit_first_words()
 
 if __name__ == "__main__":
     run()

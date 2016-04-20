@@ -42,7 +42,8 @@ def extract_commit_file_components(commit_files):
 
 
 def get_first_word(string):
-    return match('^([\s]+)?([^\s]+)', string).group().strip()
+    first_word = match('^([\s]+)?([^\s]+)', string)
+    return first_word.group().strip() if first_word else ''
 
 
 def remove_non_alpha(word):

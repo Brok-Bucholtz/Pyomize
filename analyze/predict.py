@@ -5,7 +5,7 @@ from sklearn.svm import SVC
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
-from analyze.dimension_reduction import filter_merge_commits, get_top_frequent_words, filter_data_by_labels
+from analyze.dimension_reduction import filter_merge_commits, get_top_frequent_words, filter_data_by_labels, stem_labels
 
 
 def _get_file_stats(commit_files):
@@ -26,7 +26,7 @@ def run():
 
     commits = filter_merge_commits(commits)
     commit_files_list = [commit.files for commit in commits]
-    commit_first_words = [get_first_word(commit.message) for commit in commits]
+    commit_first_words = stem_labels([get_first_word(commit.message) for commit in commits])
     top_words = get_top_frequent_words(commit_first_words, 8)
     label_encoder = LabelEncoder()
 

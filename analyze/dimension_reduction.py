@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sklearn.feature_extraction.text import TfidfVectorizer
 from operator import itemgetter
 from analyze.helper import is_merge_commit
+from nltk.stem.lancaster import LancasterStemmer
 
 
 def filter_merge_commits(commits):
@@ -20,6 +21,11 @@ def filter_data_by_labels(X, y, label_filters):
     x_ys = zip(X, y)
 
     return zip(*[x_y for x_y in x_ys if x_y[1] in label_filters])
+
+
+def stem_labels(labels):
+    lancaster_stemmer = LancasterStemmer()
+    return [lancaster_stemmer.stem(label) for label in labels]
 
 
 def run():

@@ -1,14 +1,14 @@
 from collections import OrderedDict, Counter
+from analyze.helper import get_first_word
 from github_database import engine, Commit, File
 from sqlalchemy.orm import sessionmaker
 from sklearn.feature_extraction.text import TfidfVectorizer
 from operator import itemgetter
-from analyze.helper import is_merge_commit
 from nltk.stem.lancaster import LancasterStemmer
 
 
 def filter_merge_commits(commits):
-    return [commit for commit in commits if not is_merge_commit(commit.message)]
+    return [commit for commit in commits if get_first_word(commit.message).lower() != 'merge']
 
 
 def get_top_frequent_words(words, top_count):

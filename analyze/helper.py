@@ -41,11 +41,5 @@ def extract_commit_file_components(commit_files):
     return commit_file_components
 
 
-def is_merge_commit(commit):
-    return bool(match('^Merge pull request #\d+ from ', commit) or
-                match('^Merge remote-tracking branch ', commit) or
-                match('^Merge branch ', commit))
-
-
 def get_first_word(string):
     return match('^([\s]+)?([^\s]+)', string).group().strip()

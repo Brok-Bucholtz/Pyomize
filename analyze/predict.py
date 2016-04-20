@@ -5,7 +5,7 @@ from sklearn.svm import SVC
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
-from analyze.dimension_reduction import filter_merge_commits, get_top_frequent_words
+from analyze.dimension_reduction import filter_merge_commits, get_top_frequent_words, filter_data_by_labels
 
 
 def _get_file_stats(commit_files):
@@ -15,18 +15,6 @@ def _get_file_stats(commit_files):
         additions += commit_file.additions
         deletions += commit_file.deletions
     return [additions, deletions]
-
-
-def _collect_data_by_labels(X, y, filters):
-    assert len(y) == len(X)
-
-    new_x = []
-    new_y = []
-    for data_i in range(len(y)):
-        if y[data_i] in filters:
-            new_x.append(X[data_i])
-            new_y.append(y[data_i])
-    return new_x, new_y
 
 
 def run():
@@ -39,12 +27,14 @@ def run():
     commits = filter_merge_commits(commits)
     commit_files_list = [commit.files for commit in commits]
     commit_first_words = [get_first_word(commit.message) for commit in commits]
-    filtered_labels = get_top_frequent_words(commit_first_words, 8)
+    top_words = get_top_frequent_words(commit_first_words, 8)
     label_encoder = LabelEncoder()
 
     X_all = [_get_file_stats(commit_files) for commit_files in commit_files_list]
-    y_all = label_encoder.fit_transform(commit_first_words)
-    X_all, y_all = _collect_data_by_labels(X_all, y_all, label_encoder.transform(filtered_labels))
+    y_all = commit_first_words
+    X_all, y_all = filter_data_by_labels(X_all, y_all, top_words)
+    y_all = label_encoder.fit_transform(y_all)
+
     num_all = len(X_all)
     num_train = num_all*0.25
     clf = SVC()

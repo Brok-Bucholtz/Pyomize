@@ -15,6 +15,13 @@ def get_top_frequent_words(words, top_count):
     return [word_occurances[0] for word_occurances in word_occurances.items()[:top_count]]
 
 
+def filter_data_by_labels(X, y, label_filters):
+    assert len(y) == len(X)
+    x_ys = zip(X, y)
+
+    return zip(*[x_y for x_y in x_ys if x_y[1] in label_filters])
+
+
 def run():
     db_session = sessionmaker(bind=engine)()
     commits = db_session \

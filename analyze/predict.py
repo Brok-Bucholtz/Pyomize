@@ -2,13 +2,13 @@ from sklearn.svm import SVC
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
-from analyze.dimension_reduction import get_data_for_linear_regression
+from analyze.dimension_reduction import get_file_stats_data
 
 
 def _run_svc_on_file_stats():
     clf = SVC()
     label_encoder = LabelEncoder()
-    X_all, y_all = get_data_for_linear_regression()
+    X_all, y_all = get_file_stats_data()
     y_all = label_encoder.fit_transform(y_all)
 
     num_all = len(X_all)

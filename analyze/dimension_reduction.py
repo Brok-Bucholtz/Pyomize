@@ -37,7 +37,7 @@ def _get_file_stats(commit_files):
     return [additions, deletions]
 
 
-def get_data_for_linear_regression():
+def get_file_stats_data():
     db_session = sessionmaker(bind=engine)()
     commits = db_session \
         .query(Commit) \

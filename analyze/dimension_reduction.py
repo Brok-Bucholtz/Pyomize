@@ -1,7 +1,7 @@
 from collections import OrderedDict, Counter
-from analyze.helper import get_first_word
+from analyze.helper import get_first_word, remove_non_alpha
 from github_database import engine, Commit, File
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
 from sklearn.feature_extraction.text import TfidfVectorizer
 from operator import itemgetter
 from nltk.stem.lancaster import LancasterStemmer
@@ -26,6 +26,34 @@ def filter_data_by_labels(X, y, label_filters):
 def stem_labels(labels):
     lancaster_stemmer = LancasterStemmer()
     return [lancaster_stemmer.stem(label) for label in labels]
+
+
+def _get_file_stats(commit_files):
+    additions = 0
+    deletions = 0
+    for commit_file in commit_files:
+        additions += commit_file.additions
+        deletions += commit_file.deletions
+    return [additions, deletions]
+
+
+def get_data_for_linear_regression():
+    db_session = sessionmaker(bind=engine)()
+    commits = db_session \
+        .query(Commit) \
+        .options(joinedload(Commit.files)) \
+        .all()
+
+    commits = filter_merge_commits(commits)
+    commit_files_list = [commit.files for commit in commits]
+    commit_first_words = stem_labels([remove_non_alpha(get_first_word(commit.message)) for commit in commits])
+    top_words = get_top_frequent_words(commit_first_words, 8)
+
+    X_all = [_get_file_stats(commit_files) for commit_files in commit_files_list]
+    y_all = commit_first_words
+    X_all, y_all = filter_data_by_labels(X_all, y_all, top_words)
+
+    return X_all, y_all
 
 
 def run():

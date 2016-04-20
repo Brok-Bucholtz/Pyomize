@@ -1,4 +1,4 @@
-from re import match
+from re import match, sub
 
 
 def extract_commit_components(commits):
@@ -43,3 +43,7 @@ def extract_commit_file_components(commit_files):
 
 def get_first_word(string):
     return match('^([\s]+)?([^\s]+)', string).group().strip()
+
+
+def remove_non_alpha(word):
+    return sub('[^a-zA-Z]', '', word)

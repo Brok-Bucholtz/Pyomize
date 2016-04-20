@@ -1,5 +1,5 @@
 from sqlalchemy.orm import sessionmaker, joinedload
-from analyze.helper import get_first_word
+from analyze.helper import get_first_word, remove_non_alpha
 from github_database import engine, Commit
 from sklearn.svm import SVC
 from sklearn.cross_validation import train_test_split
@@ -26,7 +26,7 @@ def run():
 
     commits = filter_merge_commits(commits)
     commit_files_list = [commit.files for commit in commits]
-    commit_first_words = stem_labels([get_first_word(commit.message) for commit in commits])
+    commit_first_words = stem_labels([remove_non_alpha(get_first_word(commit.message)) for commit in commits])
     top_words = get_top_frequent_words(commit_first_words, 8)
     label_encoder = LabelEncoder()
 

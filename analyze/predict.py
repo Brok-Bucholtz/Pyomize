@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 from analyze.dimension_reduction import get_data_for_linear_regression
 
 
-def run():
+def _run_svc_on_file_stats():
     clf = SVC()
     label_encoder = LabelEncoder()
     X_all, y_all = get_data_for_linear_regression()
@@ -19,14 +19,18 @@ def run():
     print "Training set size: {}".format(len(X_train))
     print "Accuracy for training set:"
     print classification_report(
-            y_train,
-            clf.predict(X_train),
-            target_names=label_encoder.classes_)
+        y_train,
+        clf.predict(X_train),
+        target_names=label_encoder.classes_)
     print "Accuracy for test set:"
     print classification_report(
-            y_test,
-            clf.predict(X_test),
-            target_names=label_encoder.classes_)
+        y_test,
+        clf.predict(X_test),
+        target_names=label_encoder.classes_)
+
+
+def run():
+    _run_svc_on_file_stats()
 
 if __name__ == "__main__":
     run()

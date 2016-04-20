@@ -37,7 +37,7 @@ def _get_file_stats(commit_files):
     return [additions, deletions]
 
 
-def get_file_stats_data():
+def get_file_stats_data(label_count=8):
     db_session = sessionmaker(bind=engine)()
     commits = db_session \
         .query(Commit) \
@@ -47,7 +47,7 @@ def get_file_stats_data():
     commits = _filter_merge_commits(commits)
     commit_files_list = [commit.files for commit in commits]
     commit_first_words = _stem_labels([remove_non_alpha(get_first_word(commit.message)) for commit in commits])
-    top_words = _get_top_frequent_words(commit_first_words, 8)
+    top_words = _get_top_frequent_words(commit_first_words, label_count)
 
     X_all = [_get_file_stats(commit_files) for commit_files in commit_files_list]
     y_all = commit_first_words

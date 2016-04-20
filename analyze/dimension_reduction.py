@@ -7,23 +7,23 @@ from operator import itemgetter
 from nltk.stem.lancaster import LancasterStemmer
 
 
-def filter_merge_commits(commits):
+def _filter_merge_commits(commits):
     return [commit for commit in commits if get_first_word(commit.message).lower() != 'merge']
 
 
-def get_top_frequent_words(words, top_count):
+def _get_top_frequent_words(words, top_count):
     word_occurances = OrderedDict(sorted(Counter(words).items(), key=itemgetter(1), reverse=True))
     return [word_occurances[0] for word_occurances in word_occurances.items()[:top_count]]
 
 
-def filter_data_by_labels(X, y, label_filters):
+def _filter_data_by_labels(X, y, label_filters):
     assert len(y) == len(X)
     x_ys = zip(X, y)
 
     return zip(*[x_y for x_y in x_ys if x_y[1] in label_filters])
 
 
-def stem_labels(labels):
+def _stem_labels(labels):
     lancaster_stemmer = LancasterStemmer()
     return [lancaster_stemmer.stem(label) for label in labels]
 
@@ -44,14 +44,14 @@ def get_data_for_linear_regression():
         .options(joinedload(Commit.files)) \
         .all()
 
-    commits = filter_merge_commits(commits)
+    commits = _filter_merge_commits(commits)
     commit_files_list = [commit.files for commit in commits]
-    commit_first_words = stem_labels([remove_non_alpha(get_first_word(commit.message)) for commit in commits])
-    top_words = get_top_frequent_words(commit_first_words, 8)
+    commit_first_words = _stem_labels([remove_non_alpha(get_first_word(commit.message)) for commit in commits])
+    top_words = _get_top_frequent_words(commit_first_words, 8)
 
     X_all = [_get_file_stats(commit_files) for commit_files in commit_files_list]
     y_all = commit_first_words
-    X_all, y_all = filter_data_by_labels(X_all, y_all, top_words)
+    X_all, y_all = _filter_data_by_labels(X_all, y_all, top_words)
 
     return X_all, y_all
 

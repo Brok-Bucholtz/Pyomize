@@ -12,6 +12,12 @@ START_PAGE = 1
 
 
 def _get_missing_commits_from_db(db_session, repo):
+    """
+    Get a page of commits not in database
+    :param db_session: Database session
+    :param repo: Repository API
+    :return: List of commits not in the database
+    """
     db_commits = db_session \
         .query(Commit.sha) \
         .filter(Commit.repository.has(name=repo.name, owner_login=repo.owner.login)) \
@@ -30,6 +36,12 @@ def _get_missing_commits_from_db(db_session, repo):
 
 
 def _get_new_commits(db_session, commit_api):
+    """
+    Get all commits not in the database
+    :param db_session: Database session
+    :param commit_api: Commit API
+    :return: List of all commits not in the database
+    """
     commits = _get_missing_commits_from_db(db_session, commit_api)
     while commits:
         for commit in commits:
@@ -38,6 +50,13 @@ def _get_new_commits(db_session, commit_api):
 
 
 def _get_or_create(db_session, model, model_args):
+    """
+    Get the model based on the model arguments, otherwise create a new one and return it
+    :param db_session: Database session
+    :param model: Database model
+    :param model_args: Arguments for the database model to search/create
+    :return: Database instance of model
+    """
     db_instance = db_session.query(model).filter_by(**model_args).first()
     if not db_instance:
         db_instance = model(**model_args)

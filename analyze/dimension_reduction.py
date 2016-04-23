@@ -8,15 +8,33 @@ from nltk.stem.lancaster import LancasterStemmer
 
 
 def _filter_merge_commits(commits):
+    """
+    Return a list of commits without merges
+    :param commits: List of database commit objects
+    :return: List of database commits objects without merges
+    """
     return [commit for commit in commits if get_first_word(commit.message).lower() != 'merge']
 
 
 def _get_top_frequent_words(words, top_count):
+    """
+    Return a unique list of words from most frequent to least frequent from a list
+    :param words: List of words
+    :param top_count: Number of words to return
+    :return: Top most frequent words found
+    """
     word_occurances = OrderedDict(sorted(Counter(words).items(), key=itemgetter(1), reverse=True))
     return [word_occurances[0] for word_occurances in word_occurances.items()[:top_count]]
 
 
 def _filter_data_by_labels(X, y, label_filters):
+    """
+    Filter out features and labels based on label
+    :param X: Features
+    :param y: Labels
+    :param label_filters: Labels to filter out
+    :return: Features and labels that have been filterd based on label_filters
+    """
     assert len(y) == len(X)
     x_ys = zip(X, y)
 
@@ -24,11 +42,21 @@ def _filter_data_by_labels(X, y, label_filters):
 
 
 def _stem_labels(labels):
+    """
+    Stem a list of labels
+    :param labels: List of labels
+    :return: List of stemmed labels
+    """
     lancaster_stemmer = LancasterStemmer()
     return [lancaster_stemmer.stem(label) for label in labels]
 
 
 def _get_file_stats(commit_files):
+    """
+    Get total additions and deletions from commit_files
+    :param commit_files: List of database file objects
+    :return: Total additions and deletions for files
+    """
     additions = 0
     deletions = 0
     for commit_file in commit_files:
@@ -38,6 +66,11 @@ def _get_file_stats(commit_files):
 
 
 def get_file_stats_data(label_count=8):
+    """
+    Get features and labels of commit messages and file stats
+    :param label_count: Number of labels to return
+    :return: Features of file stats and labels of first words in commit messages
+    """
     db_session = sessionmaker(bind=engine)()
     commits = db_session \
         .query(Commit) \
@@ -54,6 +87,10 @@ def get_file_stats_data(label_count=8):
 
 
 def get_file_patch_data():
+    """
+    Get features and labels of commit messages and file patches
+    :return: Features of vectorized file patches and labels of vectorized commit messages
+    """
     db_session = sessionmaker(bind=engine)()
     commits = db_session \
         .query(Commit) \

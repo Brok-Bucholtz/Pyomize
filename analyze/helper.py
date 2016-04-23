@@ -2,6 +2,11 @@ from re import match, sub
 
 
 def extract_commit_components(commits):
+    """
+    Extract components from individual commits to create lists for each component
+    :param commits: List of database commit objects
+    :return: Dictionary with all the components from the commits
+    """
     commit_components = {
         'messages': [],
         'repositories': [],
@@ -21,6 +26,11 @@ def extract_commit_components(commits):
 
 
 def extract_commit_file_components(commit_files):
+    """
+    Extract components from individual files to create lists for each component
+    :param commit_files: List of database file objects
+    :return: Dictionary with all the components from the files
+    """
     commit_file_components = {
         'patches': [],
         'additions': [],
@@ -42,9 +52,19 @@ def extract_commit_file_components(commit_files):
 
 
 def get_first_word(string):
+    """
+    Get the first word in a string
+    :param string: The string to extract the first word from
+    :return: The first word in the string or empty string
+    """
     first_word = match('^([\s]+)?([^\s]+)', string)
     return first_word.group().strip() if first_word else ''
 
 
 def remove_non_alpha(word):
+    """
+    Remove non-alphabetical characters from a word
+    :param word: The word to remove non-alphabetical characters from
+    :return: Word with only alphabetical characters
+    """
     return sub('[^a-zA-Z]', '', word)

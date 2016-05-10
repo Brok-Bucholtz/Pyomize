@@ -7,15 +7,6 @@ from operator import itemgetter
 from nltk.stem.lancaster import LancasterStemmer
 
 
-def _filter_merge_commits(commits):
-    """
-    Return a list of commits without merges
-    :param commits: List of database commit objects
-    :return: List of database commits objects without merges
-    """
-    return [commit for commit in commits if get_first_word(commit.message).lower() != 'merge']
-
-
 def _get_top_frequent_words(words, top_count):
     """
     Return a unique list of words from most frequent to least frequent from a list
@@ -32,13 +23,27 @@ def _filter_data_by_labels(X, y, label_filters):
     Filter out features and labels based on label
     :param X: Features
     :param y: Labels
+    :param label_filters: Labels to use
+    :return: Features and labels that have been a label in label_filters
+    """
+    assert len(y) == len(X)
+    x_ys = zip(X, y)
+
+    return zip(*[x_y for x_y in x_ys if x_y[1] in label_filters])
+
+
+def _remove_data_by_labels(X, y, label_filters):
+    """
+    Filter out features and labels based on label
+    :param X: Features
+    :param y: Labels
     :param label_filters: Labels to filter out
     :return: Features and labels that have been filterd based on label_filters
     """
     assert len(y) == len(X)
     x_ys = zip(X, y)
 
-    return zip(*[x_y for x_y in x_ys if x_y[1] in label_filters])
+    return zip(*[x_y for x_y in x_ys if x_y[1] not in label_filters])
 
 
 def _stem_labels(labels):
@@ -77,13 +82,13 @@ def get_file_stats_data(label_count=8):
         .options(joinedload(Commit.files)) \
         .all()
 
-    commits = _filter_merge_commits(commits)
     commit_files_list = [commit.files for commit in commits]
 
     X_all = [_get_file_stats(commit_files) for commit_files in commit_files_list]
     y_all = _stem_labels([remove_non_alpha(get_first_word(commit.message)) for commit in commits])
+    x_filtered, y_filtered = _remove_data_by_labels(X_all, y_all, ['merg', '', 'issu'])
 
-    return _filter_data_by_labels(X_all, y_all, _get_top_frequent_words(y_all, label_count))
+    return _filter_data_by_labels(x_filtered, y_filtered, _get_top_frequent_words(y_filtered, label_count))
 
 
 def get_file_patch_data():

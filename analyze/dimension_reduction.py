@@ -1,8 +1,7 @@
 from collections import OrderedDict, Counter
 from analyze.helper import get_first_word, remove_non_alpha
-from github_database import engine, Commit, File
+from github_database import engine, Commit
 from sqlalchemy.orm import sessionmaker, joinedload
-from sklearn.feature_extraction.text import TfidfVectorizer
 from operator import itemgetter
 from nltk.stem.lancaster import LancasterStemmer
 
@@ -70,6 +69,11 @@ def _get_file_stats(commit_files):
     return [additions, deletions]
 
 
+def _get_first_word_in_commit_message(x, messages):
+    y = _stem_labels([remove_non_alpha(get_first_word(message)) for message in messages])
+    return _remove_data_by_labels(x, y, ['merg', '', 'issu'])
+
+
 def get_file_stats_data(label_count=8):
     """
     Get features and labels of commit messages and file stats
@@ -85,8 +89,8 @@ def get_file_stats_data(label_count=8):
     commit_files_list = [commit.files for commit in commits]
 
     X_all = [_get_file_stats(commit_files) for commit_files in commit_files_list]
-    y_all = _stem_labels([remove_non_alpha(get_first_word(commit.message)) for commit in commits])
-    x_filtered, y_filtered = _remove_data_by_labels(X_all, y_all, ['merg', '', 'issu'])
+    y_all = [commit.message for commit in commits]
+    x_filtered, y_filtered = _get_first_word_in_commit_message(X_all, y_all)
 
     return _filter_data_by_labels(x_filtered, y_filtered, _get_top_frequent_words(y_filtered, label_count))
 
@@ -103,16 +107,18 @@ def get_file_patch_data():
         .all()
 
     commit_files_list = [commit.files for commit in commits]
-    commit_ignore_words = [u'to', u'the', u'for', u'and', u'in', u'from', u'of']
     python_keywords = [u'and', u'del', u'from', u'not', u'while', u'as', u'elif', u'global', u'or', u'with', u'assert',
                        u'else', u'if', u'pass', u'yield', u'break', u'except', u'import', u'print', u'class', u'exec',
                        u'in', u'raise', u'continue', u'finally', u'is', u'return', u'def', u'for', u'lambda', u'try']
-    commit_file_ignore_words = python_keywords
-
-    commit_vectorizer = TfidfVectorizer(stop_words=commit_ignore_words)
-    commit_vectorizer.fit_transform([commit.message for commit in commits])
-
-    commit_file_vectorizer = TfidfVectorizer(stop_words=commit_file_ignore_words)
-    commit_file_vectorizer.fit_transform([commit_file.patch for commit_file in commit_files_list if commit_file.patch])
-
-    return commit_vectorizer, commit_file_vectorizer
+    commit_files_list, first_word_messages = _get_first_word_in_commit_message(
+        commit_files_list,
+        [commit.message for commit in commits])
+    file_patches = []
+    for commit_files in commit_files_list:
+        patches = ""
+        for commit_file in commit_files:
+            for word in commit_file.patch:
+                if word not in python_keywords:
+                    patches += commit_file.patch
+        file_patches.append(patches)
+    return file_patches, first_word_messages

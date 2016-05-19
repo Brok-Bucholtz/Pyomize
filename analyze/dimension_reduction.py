@@ -106,19 +106,20 @@ def get_file_patch_data():
         .options(joinedload(Commit.files)) \
         .all()
 
-    commit_files_list = [commit.files for commit in commits]
     python_keywords = [u'and', u'del', u'from', u'not', u'while', u'as', u'elif', u'global', u'or', u'with', u'assert',
                        u'else', u'if', u'pass', u'yield', u'break', u'except', u'import', u'print', u'class', u'exec',
                        u'in', u'raise', u'continue', u'finally', u'is', u'return', u'def', u'for', u'lambda', u'try']
-    commit_files_list, first_word_messages = _get_first_word_in_commit_message(
-        commit_files_list,
-        [commit.message for commit in commits])
+    commit_data = zip(*_get_first_word_in_commit_message(
+        [commit.files for commit in commits],
+        [commit.message for commit in commits]))
+
     file_patches = []
-    for commit_files in commit_files_list:
-        patches = ""
-        for commit_file in commit_files:
-            for word in commit_file.patch:
-                if word not in python_keywords:
-                    patches += commit_file.patch
-        file_patches.append(patches)
+    first_word_messages = []
+    for commit_files, first_word_message in commit_data:
+        if commit_files:
+            patches = [word for word in [commit_file.patch for commit_file in commit_files]
+                       if word and word not in python_keywords]
+            if patches:
+                file_patches.append(''.join(patches))
+                first_word_messages.append(first_word_message)
     return file_patches, first_word_messages

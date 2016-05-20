@@ -7,6 +7,7 @@ from collections import Counter
 from analyze.helper import extract_commit_components, extract_commit_file_components
 from re import compile
 import pylab as pl
+from nltk.stem.lancaster import LancasterStemmer
 
 
 def _get_word_frequency(lines):
@@ -67,11 +68,12 @@ def _print_first_word_commit_message_frequency():
         .query(Commit) \
         .all()
     regex_search = compile('^([\s]+)?([^\s]+)')
+    lancaster_stemmer = LancasterStemmer()
 
-    commit_message_first_words = [regex_search.match(commit.message).group().strip() for commit in commits]
+    commit_message_first_words = [lancaster_stemmer.stem(regex_search.match(commit.message).group().strip()) for commit in commits if commit.message]
 
     print "Commit Message First Word Frequency"
-    print _get_word_frequency(commit_message_first_words)
+    print [(word_freq[0], word_freq[1]/float(len(commit_message_first_words))) for word_freq in _get_word_frequency(commit_message_first_words)]
 
 
 def _break_into_labels(X, y):

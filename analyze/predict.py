@@ -13,10 +13,7 @@ def _run_svc_on_file_stats():
     label_encoder = LabelEncoder()
     X_all, y_all = get_file_stats_data()
     y_all = label_encoder.fit_transform(y_all)
-
-    num_all = len(X_all)
-    num_train = num_all * 0.25
-    X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, train_size=(num_train / float(num_all)))
+    X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.25)
     clf.fit(X_train, y_train)
 
     print "Training set size: {}".format(len(X_train))

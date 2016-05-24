@@ -4,6 +4,7 @@ from github_database import engine, Commit
 from sqlalchemy.orm import sessionmaker, joinedload
 from operator import itemgetter
 from nltk.stem.lancaster import LancasterStemmer
+from re import compile
 
 
 def _get_top_frequent_words(words, top_count):
@@ -98,7 +99,7 @@ def get_file_stats_data(label_count=8):
 def get_file_patch_data():
     """
     Get features and labels of commit messages and file patches
-    :return: Features of vectorized file patches and labels of vectorized commit messages
+    :return: File patch and commit message data
     """
     db_session = sessionmaker(bind=engine)()
     commits = db_session \
@@ -106,20 +107,22 @@ def get_file_patch_data():
         .options(joinedload(Commit.files)) \
         .all()
 
-    python_keywords = [u'and', u'del', u'from', u'not', u'while', u'as', u'elif', u'global', u'or', u'with', u'assert',
-                       u'else', u'if', u'pass', u'yield', u'break', u'except', u'import', u'print', u'class', u'exec',
-                       u'in', u'raise', u'continue', u'finally', u'is', u'return', u'def', u'for', u'lambda', u'try']
     commit_data = zip(*_get_first_word_in_commit_message(
         [commit.files for commit in commits],
         [commit.message for commit in commits]))
 
     file_patches = []
     first_word_messages = []
+    file_stats = []
+    regex_context = compile(r'\n[-+].*')
+    regex_space = compile(r' +')
     for commit_files, first_word_message in commit_data:
         if commit_files:
-            patches = [word for word in [commit_file.patch for commit_file in commit_files]
-                       if word and word not in python_keywords]
+            patches = [regex_space.sub(' ', ''.join(regex_context.findall(patch)))[1:] for patch in [
+                commit_file.patch for commit_file in commit_files] if patch]
             if patches:
                 file_patches.append(''.join(patches))
                 first_word_messages.append(first_word_message)
-    return file_patches, first_word_messages
+                file_stats.append(_get_file_stats(commit_files))
+    return _filter_data_by_labels(zip(file_patches, file_stats), first_word_messages, _get_top_frequent_words(first_word_messages, 3))
+
